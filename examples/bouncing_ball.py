@@ -12,7 +12,7 @@ class BouncingBall(PhalcoPulseFX):
         self.position = 2.0  # Initial height
         self.velocity = 0.5  # Initial upward velocity
         self.gravity = -0.98  # Gravity acceleration
-        self.e = 0.8  # Coefficient of restitution
+        self.e = 0.95  # Coefficient of restitution
 
     def loop(self, delta_time):
         # Update position and velocity
