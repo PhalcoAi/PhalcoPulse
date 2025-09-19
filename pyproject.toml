@@ -1,0 +1,24 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "phalcopulse"
+version = "0.1.0"
+description = "A real-time 3D visualization engine with PyOpenGL."
+dependencies = [
+    "pygame-ce>=2.3.1",
+    "PyOpenGL>=3.1.6",
+    "numpy>=1.20.0",
+]
+
+# This section explicitly tells setuptools where to find package source code.
+# It is the most robust way to configure a project.
+[tool.setuptools.packages.find]
+where = ["."]  # Look for packages in the root directory (alongside this file)
+include = ["phalcopulse*"]  # Include the 'phalcopulse' package and its sub-packages
+exclude = ["examples*", "tests*"]  # Explicitly ignore other folders
+
+[project.urls]
+Homepage = "https://github.com/PhalcoAi/PhalcoPulse"
+Issues = "https://github.com/PhalcoAi/PhalcoPulse/issues"
