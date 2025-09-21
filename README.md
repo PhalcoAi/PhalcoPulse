@@ -10,7 +10,6 @@ rapid prototyping of scientific simulations, physics-based animations, interacti
 The engine provides a clean scene-based architecture and a modern, interactive GUI overlay, allowing you to focus on
 your simulation logic while the studio handles the rendering and user interaction.
 
-
 ![PhalcoPulse Demo](docs/PhalcoPulseStudio.gif)
 
 ---
@@ -78,50 +77,42 @@ Save it in the `examples/` folder and run it.
 ```python
 # File: examples/bouncing_ball.py
 
-# Import the necessary classes from the PhalcoPulse package
-from phalcopulse.studio.application import *
-from phalcopulse.studio.scene import *
+from phalcopulse import PhalcoPulseStudio, PhalcoPulseFX, pgfx
+from phalcopulse.ui import Label, Button, TextInput, ToggleSwitch
 
 
 class BouncingBall(PhalcoPulseFX):
-    """A scene demonstrating simple physics for a bouncing ball."""
+    """A clean example scene that draws a single, bouncing ball."""
 
     def setup(self):
-        """Initialize the ball's properties and rendering object."""
-        self.position = 3.0  # Initial height
-        self.velocity = 0.0  # Initial velocity
-        self.gravity = -9.8  # Gravity acceleration
-        self.e = 0.85  # Coefficient of restitution (bounciness)
-
-        # For efficiency, create the reusable quadric object once during setup.
-        self.quadric = gluNewQuadric()
+        self.position = 2.0  # Initial height
+        self.velocity = 0.5  # Initial upward velocity
+        self.gravity = -0.98  # Gravity acceleration
+        self.e = 0.95  # Coefficient of restitution
 
     def loop(self, delta_time):
-        """Update physics and draw the ball each frame."""
-        # 1. Update Physics
-        if delta_time > 0:
-            self.velocity += self.gravity * delta_time
-            self.position += self.velocity * delta_time
+        # Update position and velocity
+        self.velocity += self.gravity * delta_time
+        self.position += self.velocity * delta_time
 
-            # Check for collision with the "floor" (at y=0.5, the sphere's radius)
-            if self.position < 0.5:
-                self.position = 0.5
-                self.velocity = -self.velocity * self.e  # Reverse and dampen velocity
+        # Bounce off the ground
+        if self.position < 0.5:
+            self.position = 0.5
+            self.velocity = -self.velocity * self.e
 
-        # 2. Draw the Object
-        glTranslatef(0, self.position, 0)
-        glColor3f(0.2, 0.6, 1.0)  # A pleasant blue
-        gluSphere(self.quadric, 0.5, 64, 64)  # Draw sphere with radius 0.5
+        pgfx.draw_sphere(
+            radius=0.5,
+            color=(0.2, 0.6, 0.9),
+            center=(0, self.position, 0)
+        )
 
 
 if __name__ == '__main__':
-    # Instantiate your custom scene
+    # Instantiate the example scene and the studio engine
     my_scene = BouncingBall()
-
-    # Pass the scene to the studio engine
     studio = PhalcoPulseStudio(scene_fx=my_scene)
 
-    # Run the main application loop
+    # Run the main loop
     studio.run()
 ```
 
