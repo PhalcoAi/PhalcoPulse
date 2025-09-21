@@ -10,32 +10,26 @@ import math
 
 from .scene import PhalcoPulseFX
 from .camera import Camera
-from . import ui
+from ..ui.manager import UIManager
+from ..ui.widgets import Button, Slider, Checkbox
 
 
 class PhalcoPulseStudio:
-    """
-    PhalcoPulse Studio: The core engine and visualization environment.
-    This class runs the main application loop, handles rendering, UI,
-    and user input, and executes the user-defined scene.
-    """
-
-    def __init__(self, scene_fx=PhalcoPulseFX(), width=1600, height=900):
-        if not isinstance(scene_fx, PhalcoPulseFX):
-            raise TypeError("scene_fx must be an instance of a PhalcoPulseFX subclass.")
-        self.scene = scene_fx
-
+    def __init__(self, scene_fx, width=1600, height=900):
         pygame.init()
         pygame.font.init()
+
+        self.scene = scene_fx
+        if not isinstance(self.scene, PhalcoPulseFX):
+            raise TypeError("scene_fx must be an instance of a PhalcoPulseFX subclass.")
 
         self.display = (width, height)
         self.screen = pygame.display.set_mode(self.display, DOUBLEBUF | OPENGL | RESIZABLE)
         pygame.display.set_caption("PhalcoPulse Studio")
 
-        # The Camera is now its own object
         self.camera = Camera()
+        self.ui_manager = UIManager(self)
 
-        # UI and Scene Control State
         self.font_m = pygame.font.Font(None, 24)
         self.font_l = pygame.font.Font(None, 30)
         self.colors = {
@@ -46,22 +40,65 @@ class PhalcoPulseStudio:
             'text': (230, 230, 230), 'text_dim': (160, 160, 160),
         }
         self.ui_padding = 15
-        self.ui_rects = {}
-        self.hovered_ui_element = None
-        self.active_slider = None
         self.is_paused = False
         self.show_grid = True
         self.show_axes = True
         self.simulation_speed = 1.0
         self.light_intensity = 0.8
-
         self.clock = pygame.time.Clock()
         self.start_time = time.time()
 
+        self._setup_default_ui()
         self._setup_opengl()
 
+    def _setup_default_ui(self):
+        def set_sim_speed(val): self.simulation_speed = val
+
+        def set_light(val): self.light_intensity = val
+
+        def set_grid_visible(val): self.show_grid = val
+
+        def set_axes_visible(val): self.show_axes = val
+
+        self.ui_manager.add_widget("play_pause_button", Button(rect=(0, 0, 0, 0), text="Pause/Play",
+                                                               callback=lambda: setattr(self, 'is_paused',
+                                                                                        not self.is_paused)))
+        self.ui_manager.add_widget("reset_view_button",
+                                   Button(rect=(0, 0, 0, 0), text="Reset View", callback=self.camera.reset))
+        self.ui_manager.add_widget("grid_checkbox",
+                                   Checkbox(rect=(0, 0, 0, 0), label="Show Grid", is_checked=self.show_grid,
+                                            callback=set_grid_visible))
+        self.ui_manager.add_widget("axes_checkbox",
+                                   Checkbox(rect=(0, 0, 0, 0), label="Show Axes", is_checked=self.show_axes,
+                                            callback=set_axes_visible))
+        self.ui_manager.add_widget("speed_slider", Slider(rect=(0, 0, 0, 0), label="Sim Speed", min_val=0, max_val=3.0,
+                                                          initial_val=self.simulation_speed, callback=set_sim_speed))
+        self.ui_manager.add_widget("light_slider", Slider(rect=(0, 0, 0, 0), label="Light", min_val=0, max_val=1.5,
+                                                          initial_val=self.light_intensity, callback=set_light))
+
+    def _update_ui_layout(self):
+        panel_width = 260
+        panel_x = self.display[0] - panel_width
+        p = self.ui_padding
+        y = self.display[1] - p - 35
+        btn_w = (panel_width - p * 3) // 2
+
+        self.ui_manager.widgets["play_pause_button"].rect.update(panel_x + p, y, btn_w, 35)
+        self.ui_manager.widgets["reset_view_button"].rect.update(panel_x + p * 2 + btn_w, y, btn_w, 35)
+        y -= 50
+
+        checkbox_w = (panel_width - p * 2)
+        self.ui_manager.widgets["grid_checkbox"].rect.update(panel_x + p, y, checkbox_w, 20)
+        y -= 30
+        self.ui_manager.widgets["axes_checkbox"].rect.update(panel_x + p, y, checkbox_w, 20)
+        y -= 50
+
+        slider_w = panel_width - p * 2
+        self.ui_manager.widgets["speed_slider"].rect.update(panel_x + p, y - 20, slider_w, 20)
+        y -= 55
+        self.ui_manager.widgets["light_slider"].rect.update(panel_x + p, y - 20, slider_w, 20)
+
     def _setup_opengl(self):
-        """Initial OpenGL setup."""
         glEnable(GL_LIGHTING);
         glEnable(GL_LIGHT0)
         glLightfv(GL_LIGHT0, GL_AMBIENT, (0.3, 0.3, 0.3, 1))
@@ -74,7 +111,6 @@ class PhalcoPulseStudio:
         self._resize_viewport(self.display[0], self.display[1])
 
     def _resize_viewport(self, width, height):
-        """Handles window resizing."""
         self.display = (width, height if height > 0 else 1)
         glViewport(0, 0, self.display[0], self.display[1])
         glMatrixMode(GL_PROJECTION);
@@ -82,19 +118,12 @@ class PhalcoPulseStudio:
         gluPerspective(45, (self.display[0] / self.display[1]), 0.1, 500.0)
         glMatrixMode(GL_MODELVIEW);
         glLoadIdentity()
+        self._update_ui_layout()
 
     def _handle_events(self):
-        """Handles all user input and UI interaction."""
-        pygame_mouse_pos = pygame.mouse.get_pos()
-        gl_mouse_pos = (pygame_mouse_pos[0], self.display[1] - pygame_mouse_pos[1])
-
-        self.hovered_ui_element = None
-        for name, rect in self.ui_rects.items():
-            if rect.collidepoint(gl_mouse_pos):
-                self.hovered_ui_element = name;
-                break
-
         for event in pygame.event.get():
+            self.ui_manager.handle_event(event)
+
             if event.type == pygame.QUIT:
                 pygame.quit();
                 quit()
@@ -103,42 +132,20 @@ class PhalcoPulseStudio:
             elif event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_SPACE: self.is_paused = not self.is_paused
                 if event.key == pygame.K_r: self.camera.reset()
-            elif event.type == pygame.MOUSEBUTTONDOWN:
-                if self.hovered_ui_element:
-                    if 'button' in self.hovered_ui_element:
-                        if self.hovered_ui_element == 'play_button':
-                            self.is_paused = not self.is_paused
-                        elif self.hovered_ui_element == 'reset_button':
-                            self.camera.reset()
-                        elif self.hovered_ui_element == 'grid_button':
-                            self.show_grid = not self.show_grid
-                        elif self.hovered_ui_element == 'axes_button':
-                            self.show_axes = not self.show_axes
-                    elif 'slider' in self.hovered_ui_element:
-                        self.active_slider = self.hovered_ui_element
-                else:
+
+            if not self.ui_manager.is_mouse_over_ui:
+                if event.type == pygame.MOUSEBUTTONDOWN:
                     self.camera.mouse_buttons['left'] = (event.button == 1)
                     self.camera.mouse_buttons['right'] = (event.button == 3)
                     self.camera.handle_scroll(event.button)
-                self.camera.last_mouse_pos = event.pos
-            elif event.type == pygame.MOUSEBUTTONUP:
-                self.camera.mouse_buttons['left'] = False
-                self.camera.mouse_buttons['right'] = False
-                self.active_slider = None
-            elif event.type == pygame.MOUSEMOTION:
-                if self.active_slider:
-                    rect = self.ui_rects[self.active_slider]
-                    value = (pygame_mouse_pos[0] - rect.x) / rect.width
-                    value = max(0, min(1, value))
-                    if self.active_slider == 'sim_speed_slider':
-                        self.simulation_speed = value * 3.0
-                    elif self.active_slider == 'light_slider':
-                        self.light_intensity = value * 1.5
-                elif not self.hovered_ui_element:
+                    self.camera.last_mouse_pos = event.pos
+                elif event.type == pygame.MOUSEBUTTONUP:
+                    self.camera.mouse_buttons['left'] = False
+                    self.camera.mouse_buttons['right'] = False
+                elif event.type == pygame.MOUSEMOTION:
                     self.camera.handle_mouse_move(event.pos, self.camera.mouse_buttons)
 
     def _draw_environment(self):
-        """Draws the static, unlit environment."""
         glPushAttrib(GL_LIGHTING_BIT | GL_LINE_BIT | GL_CURRENT_BIT)
         glDisable(GL_LIGHTING)
         if self.show_grid: self._draw_adaptive_grid()
@@ -158,7 +165,6 @@ class PhalcoPulseStudio:
         glPopAttrib()
 
     def _draw_adaptive_grid(self):
-        """Draws the 'infinite' adaptive grid on the XZ plane."""
         cam_dist = np.linalg.norm(self.camera.translation)
         base_spacing = 10 ** math.floor(math.log10(cam_dist) if cam_dist > 1 else 0)
         glLineWidth(1.0)
@@ -189,31 +195,32 @@ class PhalcoPulseStudio:
         glEnd()
 
     def run(self):
-        """Starts the main application loop."""
         print("PhalcoPulse Studio: Starting main loop.")
-        self.scene.setup()
+        try:
+            self.scene.setup(self.ui_manager)
+        except TypeError:
+            self.scene.setup()
+
         while True:
-            raw_delta_time = self.clock.tick(255) / 1000.0
+            raw_delta_time = self.clock.tick(144) / 1000.0
             sim_delta_time = raw_delta_time * self.simulation_speed
             if self.is_paused: sim_delta_time = 0
 
             self._handle_events()
-
             glClearColor(*self.colors['bg']);
             glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
             glMatrixMode(GL_MODELVIEW);
             glLoadIdentity()
-
             self.camera.apply_transformations()
 
             light_val = self.light_intensity
-            glLightfv(GL_LIGHT0, GL_POSITION, (5, 5, -5, 1))
+            glLightfv(GL_LIGHT0, GL_POSITION, (5, 5, -5, 1));
             glLightfv(GL_LIGHT0, GL_DIFFUSE, (light_val, light_val, light_val, 1))
 
             self._draw_environment()
             glPushMatrix()
             self.scene.loop(sim_delta_time)
+            self.ui_manager.draw()
             glPopMatrix()
-            ui.draw_ui(self)
 
             pygame.display.flip()

@@ -7,7 +7,7 @@ class PhalcoPulseFX:
     methods to create their custom 3D scenes.
     """
 
-    def setup(self):
+    def setup(self, ui_manager):
         """Called once at the beginning to initialize the scene."""
         pass
 
