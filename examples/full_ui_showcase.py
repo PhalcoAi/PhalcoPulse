@@ -1,93 +1,71 @@
 # File: examples/full_ui_showcase.py
-
-from OpenGL.GL import *
-from phalcopulse.studio.application import PhalcoPulseStudio
-from phalcopulse.studio.scene import PhalcoPulseFX
-from phalcopulse.ui.widgets import Label, Button, TextInput, ToggleSwitch
+from phalcopulse import PhalcoPulseStudio, PhalcoPulseFX, pgfx
+from phalcopulse.ui import Label, Button, TextInput, ToggleSwitch, Slider, Checkbox
+from phalcopulse.ui.widgets import ProgressBar, Dropdown
 
 
 class FullUIShowcase(PhalcoPulseFX):
     def setup(self, ui_manager):
-        # Scene state
         self.is_rotating = True
         self.rotation_angle = 0
         self.cube_label = "My Cube"
+        self.progress = 0.0
 
-        # --- Define callbacks ---
-        def toggle_rotation(is_on):
-            self.is_rotating = is_on
+        # --- Callbacks ---
+        def toggle_rotation(is_on): self.is_rotating = is_on
 
         def reset_scene():
             self.rotation_angle = 0
-            # We can even update other widgets from a callback
-            label_widget.text = "Cube Reset!"
+            status_label.text = "Cube Reset!"
 
         def set_cube_label(new_label):
             self.cube_label = new_label
-            label_widget.text = f"Label: {self.cube_label}"
+            status_label.text = f"Label: {self.cube_label}"
 
-        # --- Add new widgets ---
-        # Add a non-interactive title label
-        ui_manager.add_widget("title_label", Label(rect=(15, 120, 300, 20), text="-- Custom Widgets --", align='left'))
+        def set_rotation_speed(val): self.rotation_speed = val
 
-        # Add a toggle switch to control rotation
-        ui_manager.add_widget("rotation_toggle",
-                              ToggleSwitch(rect=(15, 80, 50, 25), is_on=self.is_rotating, callback=toggle_rotation))
-        ui_manager.add_widget("toggle_label", Label(rect=(75, 82, 200, 20), text="Toggle Rotation", align='left'))
+        def toggle_wireframe(is_checked): self.wireframe = is_checked
 
-        # Add a text input to change the cube's label
-        ui_manager.add_widget("label_input",
-                              TextInput(rect=(15, 40, 200, 30), initial_text=self.cube_label, callback=set_cube_label))
+        def dropdown_changed(option): status_label.text = f"Dropdown: {option}"
 
-        # Add a button to reset the scene
-        ui_manager.add_widget("reset_button", Button(rect=(230, 40, 100, 30), text="Reset", callback=reset_scene))
+        # --- UI Widgets ---
+        ui_manager.add_widget("title", Label((15, 200, 300, 20), "-- Full UI Showcase --", align='left'))
 
-        # Add a label that can be updated by other widgets
-        label_widget = ui_manager.add_widget("status_label",
-                                             Label(rect=(15, 15, 300, 20), text=f"Label: {self.cube_label}",
-                                                   align='left'))
+        ui_manager.add_widget("rotation_toggle", ToggleSwitch((15, 170, 50, 25), self.is_rotating, toggle_rotation))
+        ui_manager.add_widget("toggle_label", Label((75, 172, 200, 20), "Toggle Rotation", align='left'))
+
+        ui_manager.add_widget("label_input", TextInput((15, 130, 200, 30), self.cube_label, callback=set_cube_label))
+        ui_manager.add_widget("reset_button", Button((230, 130, 100, 30), "Reset", reset_scene))
+
+        ui_manager.add_widget("speed_slider", Slider((15, 90, 200, 20), "Speed", 10, 200, 40, set_rotation_speed))
+
+        ui_manager.add_widget("wireframe_check", Checkbox((15, 60, 200, 20), "Wireframe", False, toggle_wireframe))
+
+        ui_manager.add_widget("dropdown",
+                              Dropdown((15, 30, 150, 25), ["Option A", "Option B", "Option C"], 0, dropdown_changed))
+
+        self.progressbar = ui_manager.add_widget("progress", ProgressBar((230, 30, 150, 25), 0, 100, 0))
+
+        status_label = ui_manager.add_widget("status_label",
+                                             Label((15, 10, 300, 20), f"Label: {self.cube_label}", align='left'))
+
+        # Scene vars
+        self.rotation_speed = 40
 
     def loop(self, delta_time):
         if self.is_rotating:
-            self.rotation_angle += 40 * delta_time
+            self.rotation_angle += self.rotation_speed * delta_time
 
-        glRotatef(self.rotation_angle, 0, 1, 0)
-        glColor3f(1.0, 0.55, 0.0)  # Orange
+        # Update progress bar continuously
+        self.progress = (self.progress + 20 * delta_time) % 100
+        self.progressbar.set_value(self.progress)
 
-        # Draw a 1x1x1 cube
-        glBegin(GL_QUADS)
-        # ... (Vertex data for cube) ...
-        glNormal3f(0, 0, 1);
-        glVertex3f(-0.5, -0.5, 0.5);
-        glVertex3f(0.5, -0.5, 0.5);
-        glVertex3f(0.5, 0.5, 0.5);
-        glVertex3f(-0.5, 0.5, 0.5)
-        glNormal3f(0, 0, -1);
-        glVertex3f(-0.5, -0.5, -0.5);
-        glVertex3f(0.5, -0.5, -0.5);
-        glVertex3f(0.5, 0.5, -0.5);
-        glVertex3f(-0.5, 0.5, -0.5)
-        glNormal3f(0, 1, 0);
-        glVertex3f(-0.5, 0.5, -0.5);
-        glVertex3f(-0.5, 0.5, 0.5);
-        glVertex3f(0.5, 0.5, 0.5);
-        glVertex3f(0.5, 0.5, -0.5)
-        glNormal3f(0, -1, 0);
-        glVertex3f(-0.5, -0.5, -0.5);
-        glVertex3f(0.5, -0.5, -0.5);
-        glVertex3f(0.5, -0.5, 0.5);
-        glVertex3f(-0.5, -0.5, 0.5)
-        glNormal3f(1, 0, 0);
-        glVertex3f(0.5, -0.5, -0.5);
-        glVertex3f(0.5, 0.5, -0.5);
-        glVertex3f(0.5, 0.5, 0.5);
-        glVertex3f(0.5, -0.5, 0.5)
-        glNormal3f(-1, 0, 0);
-        glVertex3f(-0.5, -0.5, -0.5);
-        glVertex3f(-0.5, -0.5, 0.5);
-        glVertex3f(-0.5, 0.5, 0.5);
-        glVertex3f(-0.5, 0.5, -0.5)
-        glEnd()
+        pgfx.draw_cube(
+            size=1.5,
+            color=(0.2, 0.7, 0.3),
+            center=(0, 1, 0),
+            rotation=(0, self.rotation_angle, 0)
+        )
 
 
 if __name__ == '__main__':

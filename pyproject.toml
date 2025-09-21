@@ -10,8 +10,8 @@ dependencies = [
     "pygame-ce>=2.3.1",
     "PyOpenGL>=3.1.6",
     "numpy>=1.20.0",
+    "pywavefront>=1.3.3", # Add this line
 ]
-
 # This section explicitly tells setuptools where to find package source code.
 # It is the most robust way to configure a project.
 [tool.setuptools.packages.find]

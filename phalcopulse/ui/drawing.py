@@ -174,3 +174,72 @@ def draw_toggle_switch(app, rect, is_on, is_hovered):
         angle = i * (2 * math.pi / 20)
         glVertex2f(handle_x + math.cos(angle) * handle_rad, handle_y + math.sin(angle) * handle_rad)
     glEnd()
+
+
+def draw_progress_bar(app, rect, value, min_val, max_val):
+    """Draws a simple progress bar."""
+    # Background track
+    glColor3f(0.15, 0.15, 0.15)
+    glRectf(rect.left, rect.top, rect.right, rect.bottom)
+
+    # Filled portion
+    ratio = (value - min_val) / float(max_val - min_val)
+    fill_width = rect.width * max(0.0, min(1.0, ratio))
+    glColor3fv(app.colors['accent'])
+    glRectf(rect.left, rect.top, rect.left + fill_width, rect.bottom)
+
+    # Border
+    glColor3f(0.4, 0.4, 0.4)
+    glLineWidth(1.5)
+    glBegin(GL_LINE_LOOP)
+    glVertex2f(rect.left, rect.top)
+    glVertex2f(rect.right, rect.top)
+    glVertex2f(rect.right, rect.bottom)
+    glVertex2f(rect.left, rect.bottom)
+    glEnd()
+    glLineWidth(1.0)
+
+    # Percentage text
+    pct = 100 * ratio
+    render_text(app, rect.centerx - 15, rect.centery - 8, f"{pct:.0f}%", app.font_m)
+
+
+def draw_dropdown(app, rect, options, selected_index, is_open):
+    """Draws a dropdown menu."""
+    # Draw main box
+    glColor3f(0.1, 0.1, 0.1)
+    glRectf(rect.left, rect.top, rect.right, rect.bottom)
+
+    # Border
+    glColor3fv(app.colors['accent'])
+    glLineWidth(1.5)
+    glBegin(GL_LINE_LOOP)
+    glVertex2f(rect.left, rect.top)
+    glVertex2f(rect.right, rect.top)
+    glVertex2f(rect.right, rect.bottom)
+    glVertex2f(rect.left, rect.bottom)
+    glEnd()
+    glLineWidth(1.0)
+
+    # Current selection text
+    selected_text = options[selected_index] if options else ""
+    render_text(app, rect.left + 8, rect.centery - 8, selected_text, app.font_m)
+
+    # Draw dropdown arrow
+    arrow_x = rect.right - 15
+    arrow_y = rect.centery
+    glColor3fv(app.colors['text'])
+    glBegin(GL_TRIANGLES)
+    glVertex2f(arrow_x - 5, arrow_y - 3)
+    glVertex2f(arrow_x + 5, arrow_y - 3)
+    glVertex2f(arrow_x, arrow_y + 4)
+    glEnd()
+
+    # Expanded options if open
+    if is_open:
+        for i, option in enumerate(options):
+            option_rect = pygame.Rect(rect.x, rect.y + (i + 1) * rect.height, rect.width, rect.height)
+            glColor3f(0.08, 0.08, 0.08)
+            glRectf(option_rect.left, option_rect.top, option_rect.right, option_rect.bottom)
+            glColor3fv(app.colors['text'])
+            render_text(app, option_rect.left + 8, option_rect.centery - 8, option, app.font_m)

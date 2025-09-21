@@ -1,8 +1,7 @@
 # File: examples/bouncing_ball.py
 
-# Import the engine and scene base class from your new package
-from phalcopulse.studio.application import *
-from phalcopulse.studio.scene import *
+from phalcopulse import PhalcoPulseStudio, PhalcoPulseFX, pgfx
+from phalcopulse.ui import Label, Button, TextInput, ToggleSwitch
 
 
 class BouncingBall(PhalcoPulseFX):
@@ -24,11 +23,11 @@ class BouncingBall(PhalcoPulseFX):
             self.position = 0.5
             self.velocity = -self.velocity * self.e
 
-        glTranslatef(0, self.position, 0)
-        glColor3f(0.2, 0.6, 1.0)
-        quadric = gluNewQuadric()
-        gluSphere(quadric, 0.5, 32, 32)
-        gluDeleteQuadric(quadric)
+        pgfx.draw_sphere(
+            radius=0.5,
+            color=(0.2, 0.6, 0.9),
+            center=(0, self.position, 0)
+        )
 
 
 if __name__ == '__main__':

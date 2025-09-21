@@ -99,6 +99,7 @@ class PhalcoPulseStudio:
         self.ui_manager.widgets["light_slider"].rect.update(panel_x + p, y - 20, slider_w, 20)
 
     def _setup_opengl(self):
+        glEnable(GL_DEPTH_TEST)
         glEnable(GL_LIGHTING);
         glEnable(GL_LIGHT0)
         glLightfv(GL_LIGHT0, GL_AMBIENT, (0.3, 0.3, 0.3, 1))

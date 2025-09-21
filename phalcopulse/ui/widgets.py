@@ -193,3 +193,53 @@ class ToggleSwitch(Widget):
 
     def draw(self, app):
         drawing.draw_toggle_switch(app, self.rect, self.is_on, self.is_hovered)
+
+
+class ProgressBar(Widget):
+    """A simple progress bar widget."""
+
+    def __init__(self, rect, min_val=0, max_val=100, initial_val=0):
+        super().__init__(rect)
+        self.min_val = min_val
+        self.max_val = max_val
+        self.value = initial_val
+
+    def set_value(self, new_val):
+        self.value = max(self.min_val, min(self.max_val, new_val))
+
+    def draw(self, app):
+        drawing.draw_progress_bar(app, self.rect, self.value, self.min_val, self.max_val)
+
+
+class Dropdown(Widget):
+    """A dropdown menu for selecting from multiple options."""
+
+    def __init__(self, rect, options, initial_index=0, callback=None):
+        super().__init__(rect)
+        self.options = options
+        self.selected_index = initial_index
+        self.is_open = False
+        self.callback = callback
+
+    def handle_event(self, event, mouse_pos):
+        super().handle_event(event, mouse_pos)
+
+        if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
+            if self.is_hovered:
+                self.is_open = not self.is_open
+            elif self.is_open:
+                # Check if clicked on one of the expanded options
+                for i, option in enumerate(self.options):
+                    option_rect = pygame.Rect(self.rect.x, self.rect.y + (i + 1) * self.rect.height,
+                                              self.rect.width, self.rect.height)
+                    if option_rect.collidepoint(mouse_pos):
+                        self.selected_index = i
+                        self.is_open = False
+                        if self.callback:
+                            self.callback(option)
+                        break
+                else:
+                    self.is_open = False
+
+    def draw(self, app):
+        drawing.draw_dropdown(app, self.rect, self.options, self.selected_index, self.is_open)
