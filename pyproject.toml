@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "phalcopulse"
-version = "0.1.0"
+version = "0.1.1"
 description = "A real-time 3D visualization engine with PyOpenGL."
 readme = "README.md"
 dependencies = [
