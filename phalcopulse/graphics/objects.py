@@ -76,31 +76,46 @@ def draw_sphere(radius=0.5, color=(1, 1, 1), center=(0, 0, 0), detail=32):
     glPopMatrix()
 
 
-def draw_cylinder(radius=0.5, height=1.0, color=(1, 1, 1), center=(0, 0, 0), detail=32):
+def draw_cylinder(start, end, radius=0.5, color=(1, 1, 1), detail=16):
     """
-    Draws a solid cylinder oriented along the Y-axis.
+    Draws a solid cylinder between two points in 3D.
 
     Args:
-        radius (float): The radius of the cylinder.
-        height (float): The height of the cylinder.
-        color (tuple): The (R, G, B) color of the cylinder.
-        center (tuple): The (x, y, z) center position of the cylinder.
-        detail (int): The resolution of the cylinder's circumference.
+        start (tuple or np.ndarray): The (x, y, z) start point.
+        end (tuple or np.ndarray): The (x, y, z) end point.
+        radius (float): Cylinder radius.
+        color (tuple): RGB color.
+        detail (int): Number of segments for smoothness.
     """
-    glPushMatrix()
-    glTranslatef(center[0], center[1] - height / 2, center[2])  # Center the cylinder
-    glRotatef(-90, 1, 0, 0)  # Orient along Y-axis
-    _set_color(color)
+    start = np.array(start, dtype=float)
+    end = np.array(end, dtype=float)
+    direction = end - start
+    height = np.linalg.norm(direction)
+    if height == 0:
+        return  # Avoid zero-length cylinder
 
+    # Normalize direction
+    direction /= height
+
+    # Compute rotation axis and angle
+    y_axis = np.array([0, 1, 0])
+    axis = np.cross(y_axis, direction)
+    angle = np.degrees(np.arccos(np.dot(y_axis, direction)))
+
+    glPushMatrix()
+    glTranslatef(*start)
+    if np.linalg.norm(axis) > 1e-6:
+        glRotatef(angle, *axis)
+
+    glColor3fv(color)
     quadric = gluNewQuadric()
-    # Bottom disk
-    gluDisk(quadric, 0, radius, detail, 1)
-    # Cylindrical body
+    # Draw cylinder body
     gluCylinder(quadric, radius, radius, height, detail, 1)
-    # Top disk
+    # Draw bottom disk
+    gluDisk(quadric, 0, radius, detail, 1)
+    # Draw top disk
     glTranslatef(0, 0, height)
     gluDisk(quadric, 0, radius, detail, 1)
-
     gluDeleteQuadric(quadric)
     glPopMatrix()
 

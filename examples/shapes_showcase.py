@@ -27,12 +27,13 @@ class ShapesShowcase(PhalcoPulseFX):
             center=(0, 0.5, 0)
         )
 
-        # Draw a cylinder at (3, 1, 0)
+        # Draw a cylinder at (3, 1, 0) with height 2.0
         pgfx.draw_cylinder(
+            start=(3, 0.0, 0),  # center.y - height/2
+            end=(3, 2.0, 0),  # center.y + height/2
             radius=0.5,
-            height=2.0,
             color=(0.2, 0.2, 0.8),  # Blue
-            center=(3, 1, 0)
+            detail=32
         )
 
         # Draw a decorative triangle

@@ -15,7 +15,7 @@ from ..ui.widgets import Button, Slider, Checkbox
 
 
 class PhalcoPulseStudio:
-    def __init__(self, scene_fx, width=1600, height=900):
+    def __init__(self, scene_fx=PhalcoPulseFX(), width=1600, height=900):
         pygame.init()
         pygame.font.init()
 
