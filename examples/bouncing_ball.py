@@ -23,10 +23,16 @@ class BouncingBall(PhalcoPulseFX):
             self.position = 0.5
             self.velocity = -self.velocity * self.e
 
+        pgfx.draw_plane(
+            size=(5, 5),
+            color=(0.5, 0.5, 0.5),
+            center=(0, 0, 0)
+        )
+
         pgfx.draw_sphere(
             radius=0.5,
             color=(0.2, 0.6, 0.9),
-            center=(0, self.position, 0)
+            center=(0, 0, self.position)
         )
 
 

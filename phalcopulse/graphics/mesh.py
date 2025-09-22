@@ -7,7 +7,7 @@ class Mesh:
     Load and render a mesh from an OBJ file with support for normals and lighting.
     """
 
-    def __init__(self, file_path, color=(0.8, 0.8, 0.8)):
+    def __init__(self, file_path, color=(0.8, 0.8, 0.8), scale=1.0):
         if not os.path.exists(file_path):
             raise FileNotFoundError(f"OBJ file not found: {file_path}")
 
@@ -15,6 +15,7 @@ class Mesh:
         self.normals = []
         self.faces = []
         self.color = color
+        self.scale = scale
 
         self._load_obj(file_path)
 
@@ -45,5 +46,6 @@ class Mesh:
                 if n_idx is not None and n_idx < len(self.normals):
                     glNormal3fv(self.normals[n_idx])
                 if v_idx is not None and v_idx < len(self.vertices):
-                    glVertex3fv(self.vertices[v_idx])
+                    scaled_vertex = tuple(self.scale * c for c in self.vertices[v_idx])
+                    glVertex3fv(scaled_vertex)
         glEnd()

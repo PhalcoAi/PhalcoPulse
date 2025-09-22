@@ -10,7 +10,7 @@ class MeshShowcase(PhalcoPulseFX):
     """
 
     def setup(self, ui_manager):
-        self.mesh = Mesh("docs/bunny.obj", color=(0.9, 0.6, 0.3))
+        self.mesh = Mesh("docs/bunny.obj", color=(0.9, 0.6, 0.3), scale=10.0)
 
     def loop(self, delta_time):
         pgfx.draw_plane(size=(10, 10), color=(0.4, 0.4, 0.4))

@@ -10,7 +10,7 @@ def _set_color(color):
         glColor3fv(color)
 
 
-def draw_cube(size=1.0, color=(1, 1, 1), center=(0, 0, 0)):
+def draw_cube(size=1.0, color=(1, 1, 1), center=(0, 0, 0), rotation=(0, 0, 0)):
     # ... (this function is unchanged) ...
     if isinstance(size, (int, float)):
         sx, sy, sz = size / 2, size / 2, size / 2
@@ -27,6 +27,9 @@ def draw_cube(size=1.0, color=(1, 1, 1), center=(0, 0, 0)):
     normals = [(0, 0, 1), (0, 0, -1), (0, 1, 0), (0, -1, 0), (1, 0, 0), (-1, 0, 0)]
     indices = [(0, 1, 2, 3), (4, 5, 6, 7), (8, 9, 10, 11), (12, 13, 14, 15), (16, 17, 18, 19), (20, 21, 22, 23)]
     glPushMatrix()
+    glRotatef(rotation[0], 1, 0, 0)
+    glRotatef(rotation[1], 0, 1, 0)
+    glRotatef(rotation[2], 0, 0, 1)
     glTranslatef(*center)
     _set_color(color)
     for i, face in enumerate(indices):

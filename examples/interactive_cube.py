@@ -37,21 +37,21 @@ class FoldingCubes(PhalcoPulseFX):
     def setup(self, ui_manager):
         # Toggle rotation
         ui_manager.add_widget("rotation_toggle",
-                              ToggleSwitch(rect=(15, 165, 50, 25), is_on=self.is_rotating,
+                              ToggleSwitch(rect=(15, 195, 50, 25), is_on=self.is_rotating,
                                            callback=lambda val: setattr(self, "is_rotating", val)))
         ui_manager.add_widget("toggle_label",
-                              Label(rect=(75, 167, 220, 20), text="Rotate Scene", align='left'))
+                              Label(rect=(75, 195, 220, 20), text="Rotate Scene", align='left'))
 
         # Fold slider
         ui_manager.add_widget("fold_slider",
-                              Slider(rect=(15, 130, 260, 18), label="Fold Amount",
+                              Slider(rect=(15, 140, 260, 18), label="Fold Amount",
                                      min_val=0.0, max_val=1.0, initial_val=self.fold,
                                      callback=lambda val: setattr(self, "fold", val)))
 
         # Cube scale slider
         ui_manager.add_widget("scale_slider",
                               Slider(rect=(15, 96, 260, 18), label="Cube Scale",
-                                     min_val=0.1, max_val=1.2, initial_val=self.cube_scale,
+                                     min_val=0.1, max_val=1.0, initial_val=self.cube_scale,
                                      callback=lambda val: setattr(self, "cube_scale", val)))
 
         # Reset button
@@ -76,10 +76,10 @@ class FoldingCubes(PhalcoPulseFX):
         for i in range(self.m):
             for j in range(self.n):
                 h = float(heights[i, j])
-                center = (i - self.m / 2, h, j - self.n / 2)
-                # simple coloring making chess patter
+                center = (i - self.m / 2, j - self.n / 2, h)
+                # simple coloring making chess pattern
                 color = ((i + j) % 2, (i + j) % 2, (i + j) % 2)
-                rotation = (0.0, self.rotation_angle, 0.0)
+                rotation = (0.0, 0.0, self.rotation_angle)
                 size = self.cube_scale
                 pgfx.draw_cube(size=size, color=color, center=center, rotation=rotation)
 

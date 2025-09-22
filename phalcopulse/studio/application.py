@@ -70,23 +70,23 @@ class PhalcoPulseStudio:
 
         def set_axes_visible(val): self.show_axes = val
 
-        self.ui_manager.add_widget("play_pause_button", Button(rect=(0, 0, 0, 0), text="Pause/Play",
+        self.ui_manager.add_widget("play_pause_button_", Button(rect=(0, 0, 0, 0), text="Pause/Play",
                                                                callback=lambda: setattr(self, 'is_paused',
                                                                                         not self.is_paused)))
-        self.ui_manager.add_widget("reset_view_button",
+        self.ui_manager.add_widget("reset_view_button_",
                                    Button(rect=(0, 0, 0, 0), text="Reset View", callback=self.camera.reset))
-        self.ui_manager.add_widget("grid_checkbox",
+        self.ui_manager.add_widget("grid_checkbox_",
                                    Checkbox(rect=(0, 0, 0, 0), label="Show Grid", is_checked=self.show_grid,
                                             callback=set_grid_visible))
-        self.ui_manager.add_widget("axes_checkbox",
+        self.ui_manager.add_widget("axes_checkbox_",
                                    Checkbox(rect=(0, 0, 0, 0), label="Show Axes", is_checked=self.show_axes,
                                             callback=set_axes_visible))
-        self.ui_manager.add_widget("speed_slider", Slider(rect=(0, 0, 0, 0), label="Sim Speed", min_val=0, max_val=3.0,
+        self.ui_manager.add_widget("speed_slider_", Slider(rect=(0, 0, 0, 0), label="Sim Speed", min_val=0, max_val=3.0,
                                                           initial_val=self.simulation_speed, callback=set_sim_speed))
-        self.ui_manager.add_widget("light_slider", Slider(rect=(0, 0, 0, 0), label="Light", min_val=0, max_val=1.5,
+        self.ui_manager.add_widget("light_slider_", Slider(rect=(0, 0, 0, 0), label="Light", min_val=0, max_val=1.5,
                                                           initial_val=self.light_intensity, callback=set_light))
 
-        self.ui_manager.add_widget("theme_checkbox",
+        self.ui_manager.add_widget("theme_checkbox_",
                                    Checkbox(rect=(0, 0, 0, 0), label="Dark Mode", is_checked=self.is_dark_mode,
                                             callback=lambda v: self.toggle_theme(v)))
 
@@ -97,24 +97,24 @@ class PhalcoPulseStudio:
         y = self.display[1] - p - 35
         btn_w = (panel_width - p * 3) // 2
 
-        self.ui_manager.widgets["play_pause_button"].rect.update(panel_x + p, y, btn_w, 35)
-        self.ui_manager.widgets["reset_view_button"].rect.update(panel_x + p * 2 + btn_w, y, btn_w, 35)
+        self.ui_manager.widgets["play_pause_button_"].rect.update(panel_x + p, y, btn_w, 35)
+        self.ui_manager.widgets["reset_view_button_"].rect.update(panel_x + p * 2 + btn_w, y, btn_w, 35)
         y -= 50
 
         checkbox_w = (panel_width - p * 2)
-        self.ui_manager.widgets["grid_checkbox"].rect.update(panel_x + p, y, checkbox_w, 20)
+        self.ui_manager.widgets["grid_checkbox_"].rect.update(panel_x + p, y, checkbox_w, 20)
         y -= 30
-        self.ui_manager.widgets["axes_checkbox"].rect.update(panel_x + p, y, checkbox_w, 20)
+        self.ui_manager.widgets["axes_checkbox_"].rect.update(panel_x + p, y, checkbox_w, 20)
         y -= 50
 
         y -= 30
-        self.ui_manager.widgets["theme_checkbox"].rect.update(panel_x + p, y, checkbox_w, 20)
+        self.ui_manager.widgets["theme_checkbox_"].rect.update(panel_x + p, y, checkbox_w, 20)
         y -= 50
 
         slider_w = panel_width - p * 2
-        self.ui_manager.widgets["speed_slider"].rect.update(panel_x + p, y - 20, slider_w, 20)
+        self.ui_manager.widgets["speed_slider_"].rect.update(panel_x + p, y - 20, slider_w, 20)
         y -= 55
-        self.ui_manager.widgets["light_slider"].rect.update(panel_x + p, y - 20, slider_w, 20)
+        self.ui_manager.widgets["light_slider_"].rect.update(panel_x + p, y - 20, slider_w, 20)
 
     def toggle_theme(self, val=None):
         self.is_dark_mode = not self.is_dark_mode if val is None else val
