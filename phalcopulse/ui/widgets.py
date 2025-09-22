@@ -243,3 +243,40 @@ class Dropdown(Widget):
 
     def draw(self, app):
         drawing.draw_dropdown(app, self.rect, self.options, self.selected_index, self.is_open)
+
+
+class ModeSelector(Widget):
+    """A widget to toggle between different modes, like PHOTO/VIDEO."""
+
+    def __init__(self, rect, modes, initial_mode_index=0, callback=None):
+        super().__init__(rect)
+        self.modes = modes
+        self.current_mode_index = initial_mode_index
+        self.callback = callback
+
+    def handle_event(self, event, mouse_pos):
+        super().handle_event(event, mouse_pos)
+        if event.type == pygame.MOUSEBUTTONUP and event.button == 1 and self.is_hovered:
+            self.current_mode_index = (self.current_mode_index + 1) % len(self.modes)
+            if self.callback:
+                self.callback(self.modes[self.current_mode_index])
+
+    def draw(self, app):
+        drawing.draw_mode_selector(app, self.rect, self.modes, self.current_mode_index)
+
+
+class CaptureButton(Widget):
+    """A special button for capturing photos or starting/stopping video."""
+
+    def __init__(self, rect, callback):
+        super().__init__(rect)
+        self.callback = callback
+
+    def handle_event(self, event, mouse_pos):
+        super().handle_event(event, mouse_pos)
+        if event.type == pygame.MOUSEBUTTONUP and event.button == 1 and self.is_hovered:
+            if self.callback:
+                self.callback()
+
+    def draw(self, app):
+        drawing.draw_capture_button(app, self.rect, app.capture_mode, app.is_recording, self.is_hovered)

@@ -11,11 +11,12 @@ import math
 from .scene import PhalcoPulseFX
 from .camera import Camera
 from ..ui.manager import UIManager
-from ..ui.widgets import Button, Slider, Checkbox
+from ..ui.widgets import Button, Slider, Checkbox, ModeSelector, CaptureButton
+from . import capture
 
 
 class PhalcoPulseStudio:
-    def __init__(self, scene_fx=PhalcoPulseFX(), width=1600, height=900):
+    def __init__(self, scene_fx=PhalcoPulseFX(), width=1600, height=896):
         pygame.init()
         pygame.font.init()
 
@@ -58,6 +59,12 @@ class PhalcoPulseStudio:
         self.clock = pygame.time.Clock()
         self.start_time = time.time()
 
+        self.capture_mode = 'PHOTO'  # Can be 'PHOTO' or 'VIDEO'
+        self.is_recording = False
+        self.video_recorder = None
+
+        self._setup_capture_ui()
+
         self._setup_default_ui()
         self._setup_opengl()
 
@@ -71,8 +78,8 @@ class PhalcoPulseStudio:
         def set_axes_visible(val): self.show_axes = val
 
         self.ui_manager.add_widget("play_pause_button_", Button(rect=(0, 0, 0, 0), text="Pause/Play",
-                                                               callback=lambda: setattr(self, 'is_paused',
-                                                                                        not self.is_paused)))
+                                                                callback=lambda: setattr(self, 'is_paused',
+                                                                                         not self.is_paused)))
         self.ui_manager.add_widget("reset_view_button_",
                                    Button(rect=(0, 0, 0, 0), text="Reset View", callback=self.camera.reset))
         self.ui_manager.add_widget("grid_checkbox_",
@@ -82,13 +89,36 @@ class PhalcoPulseStudio:
                                    Checkbox(rect=(0, 0, 0, 0), label="Show Axes", is_checked=self.show_axes,
                                             callback=set_axes_visible))
         self.ui_manager.add_widget("speed_slider_", Slider(rect=(0, 0, 0, 0), label="Sim Speed", min_val=0, max_val=3.0,
-                                                          initial_val=self.simulation_speed, callback=set_sim_speed))
+                                                           initial_val=self.simulation_speed, callback=set_sim_speed))
         self.ui_manager.add_widget("light_slider_", Slider(rect=(0, 0, 0, 0), label="Light", min_val=0, max_val=1.5,
-                                                          initial_val=self.light_intensity, callback=set_light))
+                                                           initial_val=self.light_intensity, callback=set_light))
 
         self.ui_manager.add_widget("theme_checkbox_",
                                    Checkbox(rect=(0, 0, 0, 0), label="Dark Mode", is_checked=self.is_dark_mode,
                                             callback=lambda v: self.toggle_theme(v)))
+
+    def _setup_capture_ui(self):
+        """Creates the widgets for the capture UI at the bottom of the screen."""
+
+        def set_capture_mode(mode):
+            self.capture_mode = mode
+
+        def handle_capture_press():
+            if self.capture_mode == 'PHOTO':
+                capture.take_screenshot(self.display)
+            elif self.capture_mode == 'VIDEO':
+                self.is_recording = not self.is_recording
+                if self.is_recording:
+                    self.video_recorder = capture.VideoRecorder(self.display)
+                    self.video_recorder.start()
+                else:
+                    if self.video_recorder:
+                        self.video_recorder.stop()
+                        self.video_recorder = None
+
+        self.ui_manager.add_widget("capture_button", CaptureButton(rect=(0, 0, 0, 0), callback=handle_capture_press))
+        self.ui_manager.add_widget("mode_selector",
+                                   ModeSelector(rect=(0, 0, 0, 0), modes=['PHOTO', 'VIDEO'], callback=set_capture_mode))
 
     def _update_ui_layout(self):
         panel_width = 260
@@ -115,6 +145,13 @@ class PhalcoPulseStudio:
         self.ui_manager.widgets["speed_slider_"].rect.update(panel_x + p, y - 20, slider_w, 20)
         y -= 55
         self.ui_manager.widgets["light_slider_"].rect.update(panel_x + p, y - 20, slider_w, 20)
+
+        center_x = self.display[0] / 2
+        capture_btn_y = 50
+        mode_selector_y = 110
+
+        self.ui_manager.widgets["capture_button"].rect.update(center_x - 35, capture_btn_y - 35, 70, 70)
+        self.ui_manager.widgets["mode_selector"].rect.update(center_x - 100, mode_selector_y - 15, 200, 30)
 
     def toggle_theme(self, val=None):
         self.is_dark_mode = not self.is_dark_mode if val is None else val
@@ -252,5 +289,8 @@ class PhalcoPulseStudio:
             self.scene.loop(sim_delta_time)
             self.ui_manager.draw()
             glPopMatrix()
+
+            if self.is_recording and self.video_recorder:
+                self.video_recorder.capture_frame()
 
             pygame.display.flip()

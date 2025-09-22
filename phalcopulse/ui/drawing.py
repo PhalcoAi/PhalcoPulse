@@ -243,3 +243,54 @@ def draw_dropdown(app, rect, options, selected_index, is_open):
             glRectf(option_rect.left, option_rect.top, option_rect.right, option_rect.bottom)
             glColor3fv(app.colors['text'])
             render_text(app, option_rect.left + 8, option_rect.centery - 8, option, app.font_m)
+
+
+def draw_mode_selector(app, rect, modes, current_mode_index):
+    """Draws the PHOTO / VIDEO mode selector."""
+    inactive_color = (120, 120, 120)
+    active_color = (255, 204, 0)  # A gold/yellow color
+
+    font = app.font_m
+    total_width = sum(font.size(mode)[0] for mode in modes) + (len(modes) - 1) * 20
+    start_x = rect.centerx - total_width / 2
+
+    for i, mode in enumerate(modes):
+        color = active_color if i == current_mode_index else inactive_color
+        text_surf = font.render(mode, True, color)
+        render_text(app, start_x, rect.centery - text_surf.get_height() / 2, mode, font, color=color)
+        start_x += text_surf.get_width() + 20
+
+
+def draw_capture_button(app, rect, mode, is_recording, is_hovered):
+    """Draws the main shutter/record button."""
+    center_x, center_y = rect.centerx, rect.centery
+    outer_radius = rect.width / 2
+    inner_radius = outer_radius * 0.85
+
+    # Draw outer ring
+    glColor3f(1.0, 1.0, 1.0)
+    glBegin(GL_TRIANGLE_FAN)
+    glVertex2f(center_x, center_y)
+    for i in range(41):
+        angle = i * (2 * math.pi / 40)
+        glVertex2f(center_x + math.cos(angle) * outer_radius, center_y + math.sin(angle) * outer_radius)
+    glEnd()
+
+    # Draw inner part
+    if mode == 'video':
+        inner_color = (1.0, 0.2, 0.2)  # Red
+    else:  # photo
+        inner_color = (0.9, 0.9, 0.9) if is_hovered else (1.0, 1.0, 1.0)
+
+    glColor3fv(inner_color)
+
+    if is_recording:  # Draw a stop square
+        side = inner_radius * 0.8
+        glRectf(center_x - side, center_y - side, center_x + side, center_y + side)
+    else:  # Draw a circle
+        glBegin(GL_TRIANGLE_FAN)
+        glVertex2f(center_x, center_y)
+        for i in range(41):
+            angle = i * (2 * math.pi / 40)
+            glVertex2f(center_x + math.cos(angle) * inner_radius, center_y + math.sin(angle) * inner_radius)
+        glEnd()
