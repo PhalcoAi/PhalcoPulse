@@ -32,13 +32,23 @@ class PhalcoPulseStudio:
 
         self.font_m = pygame.font.Font(None, 24)
         self.font_l = pygame.font.Font(None, 30)
-        self.colors = {
+        self.is_dark_mode = True
+        self.dark_theme = {
             'bg': (0.08, 0.09, 0.1, 1.0), 'panel': (0.12, 0.13, 0.15, 0.9),
             'accent': (1.0, 0.55, 0.0), 'accent_hover': (1.0, 0.65, 0.15),
             'grid_major': (0.25, 0.25, 0.25), 'grid_minor': (0.18, 0.18, 0.18),
             'axis_x': (0.9, 0.3, 0.3), 'axis_y': (0.3, 0.9, 0.3), 'axis_z': (0.3, 0.3, 0.9),
             'text': (230, 230, 230), 'text_dim': (160, 160, 160),
         }
+        self.light_theme = {
+            'bg': (0.92, 0.93, 0.95, 1.0), 'panel': (0.85, 0.87, 0.9, 0.9),
+            'accent': (0.85, 0.35, 0.0), 'accent_hover': (1.0, 0.45, 0.1),
+            'grid_major': (0.65, 0.65, 0.65), 'grid_minor': (0.82, 0.82, 0.82),
+            'axis_x': (0.9, 0.1, 0.1), 'axis_y': (0.1, 0.7, 0.1), 'axis_z': (0.1, 0.3, 0.9),
+            'text': (20, 20, 20), 'text_dim': (80, 80, 80),
+        }
+        self.colors = dict(self.dark_theme)  # start in dark mode
+
         self.ui_padding = 15
         self.is_paused = False
         self.show_grid = True
@@ -76,6 +86,10 @@ class PhalcoPulseStudio:
         self.ui_manager.add_widget("light_slider", Slider(rect=(0, 0, 0, 0), label="Light", min_val=0, max_val=1.5,
                                                           initial_val=self.light_intensity, callback=set_light))
 
+        self.ui_manager.add_widget("theme_checkbox",
+                                   Checkbox(rect=(0, 0, 0, 0), label="Dark Mode", is_checked=self.is_dark_mode,
+                                            callback=lambda v: self.toggle_theme(v)))
+
     def _update_ui_layout(self):
         panel_width = 260
         panel_x = self.display[0] - panel_width
@@ -93,10 +107,18 @@ class PhalcoPulseStudio:
         self.ui_manager.widgets["axes_checkbox"].rect.update(panel_x + p, y, checkbox_w, 20)
         y -= 50
 
+        y -= 30
+        self.ui_manager.widgets["theme_checkbox"].rect.update(panel_x + p, y, checkbox_w, 20)
+        y -= 50
+
         slider_w = panel_width - p * 2
         self.ui_manager.widgets["speed_slider"].rect.update(panel_x + p, y - 20, slider_w, 20)
         y -= 55
         self.ui_manager.widgets["light_slider"].rect.update(panel_x + p, y - 20, slider_w, 20)
+
+    def toggle_theme(self, val=None):
+        self.is_dark_mode = not self.is_dark_mode if val is None else val
+        self.colors = dict(self.dark_theme if self.is_dark_mode else self.light_theme)
 
     def _setup_opengl(self):
         glEnable(GL_DEPTH_TEST)
@@ -153,12 +175,17 @@ class PhalcoPulseStudio:
         if self.show_axes:
             glLineWidth(2.0);
             glBegin(GL_LINES)
+            # Red X-axis is unchanged
             glColor3fv(self.colors['axis_x']);
             glVertex3f(0, 0, 0);
             glVertex3f(1, 0, 0)
+
+            # --- MODIFIED: Green Y-axis now points "forward" ---
             glColor3fv(self.colors['axis_y']);
             glVertex3f(0, 0, 0);
             glVertex3f(0, 1, 0)
+
+            # --- MODIFIED: Blue Z-axis now points "up" ---
             glColor3fv(self.colors['axis_z']);
             glVertex3f(0, 0, 0);
             glVertex3f(0, 0, 1)
@@ -166,6 +193,7 @@ class PhalcoPulseStudio:
         glPopAttrib()
 
     def _draw_adaptive_grid(self):
+        """Draws the grid on the XY plane (Z=0)."""
         cam_dist = np.linalg.norm(self.camera.translation)
         base_spacing = 10 ** math.floor(math.log10(cam_dist) if cam_dist > 1 else 0)
         glLineWidth(1.0)
@@ -178,10 +206,11 @@ class PhalcoPulseStudio:
                 for i in np.arange(-500, 501, 1):
                     pos = i * minor_spacing
                     if abs(pos) > grid_range: continue
-                    glVertex3f(pos, 0, -grid_range);
-                    glVertex3f(pos, 0, grid_range)
-                    glVertex3f(-grid_range, 0, pos);
-                    glVertex3f(grid_range, 0, pos)
+                    # --- MODIFIED: Draw lines on the XY plane ---
+                    glVertex3f(pos, -grid_range, 0);
+                    glVertex3f(pos, grid_range, 0)
+                    glVertex3f(-grid_range, pos, 0);
+                    glVertex3f(grid_range, pos, 0)
                 glEnd()
         major_spacing = base_spacing
         glColor3fv(self.colors['grid_major']);
@@ -189,10 +218,10 @@ class PhalcoPulseStudio:
         grid_range = 50 * major_spacing
         for i in np.arange(-50, 51, 1):
             pos = i * major_spacing
-            glVertex3f(pos, 0, -grid_range);
-            glVertex3f(pos, 0, grid_range)
-            glVertex3f(-grid_range, 0, pos);
-            glVertex3f(grid_range, 0, pos)
+            glVertex3f(pos, -grid_range, 0);
+            glVertex3f(pos, grid_range, 0)
+            glVertex3f(-grid_range, pos, 0);
+            glVertex3f(grid_range, pos, 0)
         glEnd()
 
     def run(self):
@@ -215,7 +244,7 @@ class PhalcoPulseStudio:
             self.camera.apply_transformations()
 
             light_val = self.light_intensity
-            glLightfv(GL_LIGHT0, GL_POSITION, (5, 5, -5, 1));
+            glLightfv(GL_LIGHT0, GL_POSITION, (4.0, 4.0, 10.0, 1.0));
             glLightfv(GL_LIGHT0, GL_DIFFUSE, (light_val, light_val, light_val, 1))
 
             self._draw_environment()

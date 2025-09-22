@@ -7,9 +7,21 @@ from OpenGL.GL import glTranslatef, glRotatef
 class Camera:
     """Manages the 3D camera's state and user-input-based movement."""
 
-    def __init__(self, position=[0.0, -1.0, -8], rotation=[15, -45]):
+    def __init__(self, position=None, rotation=None):
+        """
+        Initializes the camera with a good default for a Z-up system.
+
+        Args:
+            position (list): The (x, y, z) starting position.
+            rotation (list): The starting [pitch, yaw] in degrees.
+        """
+        if rotation is None:
+            rotation = [-45, -30]
+        if position is None:
+            position = [0.0, 0.0, -15.0]
         self.translation = list(position)
         self.rotation = list(rotation)  # [pitch, yaw]
+
         self.initial_state = (copy.deepcopy(self.translation), copy.deepcopy(self.rotation))
 
         self.last_mouse_pos = None
@@ -50,5 +62,5 @@ class Camera:
     def apply_transformations(self):
         """Applies the camera's transformations to the OpenGL matrix."""
         glTranslatef(*self.translation)
-        glRotatef(self.rotation[0], 1, 0, 0)  # Pitch
-        glRotatef(self.rotation[1], 0, 1, 0)  # Yaw
+        glRotatef(self.rotation[0], 1, 0, 0)  # Pitch (around X axis)
+        glRotatef(self.rotation[1], 0, 0, 1)  # Yaw (around Z axis)
