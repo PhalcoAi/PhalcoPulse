@@ -14,7 +14,7 @@ your simulation logic while the studio handles the rendering and user interactio
 
 ---
 
-## ✨ Key Features
+##  Key Features
 
 * **Real-Time 3D Rendering:** Leverages the power and speed of PyOpenGL for smooth, interactive 3D graphics.
 * **Interactive Camera:** Built-in mouse controls for orbit (rotate), pan, and zoom.
@@ -27,7 +27,7 @@ your simulation logic while the studio handles the rendering and user interactio
 
 ---
 
-## ⚙️ Installation
+##  Installation
 
 ### Prerequisites
 
@@ -69,7 +69,7 @@ It is highly recommended to install the package in a virtual environment to isol
 
 ---
 
-## 🚀 Quick Start Example
+##  Quick Start Example
 
 Creating a new visualization is simple. The following script creates a scene with a ball that bounces under gravity.
 Save it in the `examples/` folder and run it.
@@ -118,7 +118,7 @@ if __name__ == '__main__':
 
 ---
 
-## 📦 Dependencies
+##  Dependencies
 
 The core dependencies are managed by `pip` during installation.
 
@@ -128,7 +128,7 @@ The core dependencies are managed by `pip` during installation.
 
 ---
 
-## 🤝 Contributing
+##  Contributing
 
 Contributions, issues, and feature requests are welcome! Feel free to check the issues page of the repository.
 
