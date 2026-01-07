@@ -132,6 +132,6 @@ The core dependencies are managed by `pip` during installation.
 
 Contributions, issues, and feature requests are welcome! Feel free to check the issues page of the repository.
 
-## 📜 License
+##  License
 
 This project is licensed under the Apache 2.0 License. See the [LICENSE](LICENSE) file for details.
